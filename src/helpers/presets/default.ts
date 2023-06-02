@@ -7,6 +7,9 @@ type FigureInPreset = {
   y: number;
 };
 
+export const VERTICAL_LINE = [1, 2, 3, 4, 5, 6, 7, 8];
+export const HORIZONTAL_LINE = ["a", "b", "c", "d", "e", "f", "g", "h"];
+
 export const basePreset: FigureInPreset[] = [
   { name: "king", color: "white", x: 4, y: 1 },
   { name: "queen", color: "white", x: 5, y: 1 },

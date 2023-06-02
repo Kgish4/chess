@@ -3,6 +3,7 @@ import styled from "styled-components";
 export const FigureContainer = styled.div<{
   x: number;
   y: number;
+  onClick: MouseEventHandler<HTMLDivElement>;
 }>`
   position: absolute;
   top: ${(props) => {

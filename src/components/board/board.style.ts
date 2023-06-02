@@ -8,5 +8,5 @@ export const Wrapper = styled(Paper)`
 
 export const Board = styled.div`
   display: grid;
-  grid-template-columns: 80px 80px 80px 80px 80px 80px 80px 80px;
+  grid-template-columns: repeat(8, 80px);
 `;

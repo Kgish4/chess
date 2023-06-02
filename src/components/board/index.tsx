@@ -1,43 +1,50 @@
-import React from "react";
-import { Wrapper, Board as BoardContainer } from "./board.d";
-import Cell from "../cell";
+import React, { useEffect, useState, useMemo } from "react";
+import { Wrapper, Board as BoardContainer } from "./board.style";
+import { Board } from "../../models/Board";
+import CellComponent from "../cell";
+import { Cell } from "../../models/Cell";
+import { Colors } from "../../models/Colors";
 
-const generateBoard = (
-  array?: JSX.Element[],
-  horizontal?: number,
-  vertical?: number
-) => {
-  const cells: JSX.Element[] = array || [];
-  let x = horizontal ? horizontal + 1 : 1;
-  let y = vertical || 1;
-  if (x === 9) {
-    x = 1;
-    y += 1;
-  }
-  if (y > 8) {
-    return cells;
-  }
-  if ((x + y) % 2 === 0) {
-    cells.push(<Cell key={`${x}${y}`} dark />);
-    generateBoard(cells, x, y);
-  }
-  if ((x + y) % 2 !== 0) {
-    cells.push(<Cell key={`${x}${y}`} />);
-    generateBoard(cells, x, y);
-  }
+interface BoardProps {
+  board: Board;
+  currentPlayer: Colors;
+  swapPlayer: () => void;
+}
 
-  return cells;
-};
-
-const Board = ({ figures }: { figures: JSX.Element[] }): JSX.Element => {
-  const board = generateBoard();
-  console.log(figures);
+const BoardComponent = ({
+  board,
+  currentPlayer,
+  swapPlayer,
+}: BoardProps): JSX.Element => {
+  const [selectedCell, setSelectedCell] = useState<Cell | null>(null);
+  useEffect(() => {}, [selectedCell]);
+  const click = (cell: Cell) => {
+    if (selectedCell && selectedCell.figure?.canMove(cell)) {
+      selectedCell.moveFigure(cell);
+      setSelectedCell(null);
+      swapPlayer();
+      console.log("1");
+    } else if (cell.figure?.color === currentPlayer) {
+      setSelectedCell(cell);
+      console.log("2");
+    }
+  };
   return (
     <Wrapper>
-      {figures}
-      <BoardContainer>{board}</BoardContainer>
+      <BoardContainer>
+        {board.cells.map((cell) => {
+          return (
+            <CellComponent
+              key={`${cell.x}${cell.y}`}
+              selected={cell.x === selectedCell?.x && cell.y === selectedCell.y}
+              cell={cell}
+              click={click}
+            ></CellComponent>
+          );
+        })}
+      </BoardContainer>
     </Wrapper>
   );
 };
 
-export default Board;
+export default BoardComponent;
