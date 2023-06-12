@@ -10,6 +10,12 @@ import { Pawn } from "./Figures/Pawn";
 
 export class Board {
   cells: Cell[] = [];
+  turn: number;
+  kingsPosition: Map<Colors, Cell>;
+  constructor(turn?: number) {
+    this.turn = turn || 0;
+    this.kingsPosition = new Map();
+  }
 
   initCells() {
     for (let i = 0; i < HORIZONTAL_LINE.length; i++) {
@@ -22,8 +28,32 @@ export class Board {
       }
     }
   }
+
+  public getCopyBoard(): Board {
+    const newBoard = new Board(this.turn);
+    newBoard.cells = this.cells;
+    newBoard.turn = this.turn;
+    return newBoard;
+  }
   public getCell(x, y): Cell {
     return this.cells.find((cell) => cell.x === x && cell.y === y)!;
+  }
+
+  public highlightCells(targetCell: Cell | null) {
+    for (let x = 0; x < HORIZONTAL_LINE.length; x++) {
+      for (let y = 0; y < VERTICAL_LINE.length; y++) {
+        if (this.cells.length === 0) {
+          return;
+        }
+        const cell = this.cells.find((cell) => cell.x === x && cell.y === y)!;
+        let isFigureCanMove = !!targetCell?.figure?.canMove(cell);
+        if (isFigureCanMove) {
+          isFigureCanMove = !!targetCell?.isKingSafe(cell);
+        }
+
+        cell.available = isFigureCanMove;
+      }
+    }
   }
   private initPawns() {
     for (let i = 0; i < VERTICAL_LINE.length; i++) {
@@ -33,8 +63,12 @@ export class Board {
   }
 
   private initKings() {
-    new King(Colors.BLACK, this.getCell(4, 0));
-    new King(Colors.WHITE, this.getCell(4, 7));
+    const blackKingCell = this.getCell(4, 0);
+    const whiteKingCell = this.getCell(4, 7);
+    new King(Colors.BLACK, blackKingCell);
+    new King(Colors.WHITE, whiteKingCell);
+    this.kingsPosition.set(Colors.BLACK, blackKingCell);
+    this.kingsPosition.set(Colors.WHITE, whiteKingCell);
   }
 
   private initQueens() {

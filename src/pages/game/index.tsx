@@ -1,8 +1,6 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useState } from "react";
 import BoardComponent from "../../components/board";
 import { Wrapper, StartButton } from "./game.style";
-import { basePreset } from "../../helpers/presets/default";
-import Figure from "../../components/figure";
 import { Board } from "../../models/Board";
 import { Colors } from "../../models/Colors";
 
@@ -33,6 +31,7 @@ const Game = () => {
         currentPlayer={currentPlayer}
         swapPlayer={swapPlayer}
         board={board}
+        setBoard={setBoard}
       />
       <StartButton onClick={startGame} variant="contained">
         Start new game

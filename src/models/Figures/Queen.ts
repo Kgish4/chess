@@ -7,4 +7,19 @@ export class Queen extends Figure {
     super(color, cell);
     this.name = FiguresName.QUEEN;
   }
+  public canMove(targetCell: Cell): boolean {
+    if (!super.canMove(targetCell)) {
+      return false;
+    }
+    if (this.cell.isEmptyHorizontal(targetCell)) {
+      return true;
+    }
+    if (this.cell.isEmptyVertical(targetCell)) {
+      return true;
+    }
+    if (this.cell.isEmptyDiagonal(targetCell)) {
+      return true;
+    }
+    return false;
+  }
 }

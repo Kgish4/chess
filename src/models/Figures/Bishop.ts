@@ -7,4 +7,14 @@ export class Bishop extends Figure {
     super(color, cell);
     this.name = FiguresName.BISHOP;
   }
+
+  public canMove(cell: Cell): boolean {
+    if (!super.canMove(cell)) {
+      return false;
+    }
+    if (this.cell.isEmptyDiagonal(cell)) {
+      return true;
+    }
+    return false;
+  }
 }

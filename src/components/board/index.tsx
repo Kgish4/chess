@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useMemo } from "react";
+import React, { useEffect, useState } from "react";
 import { Wrapper, Board as BoardContainer } from "./board.style";
 import { Board } from "../../models/Board";
 import CellComponent from "../cell";
@@ -8,25 +8,40 @@ import { Colors } from "../../models/Colors";
 interface BoardProps {
   board: Board;
   currentPlayer: Colors;
+  setBoard: (board: Board) => void;
   swapPlayer: () => void;
 }
 
 const BoardComponent = ({
   board,
   currentPlayer,
+  setBoard,
   swapPlayer,
 }: BoardProps): JSX.Element => {
   const [selectedCell, setSelectedCell] = useState<Cell | null>(null);
-  useEffect(() => {}, [selectedCell]);
+  const updateBoard = () => {
+    const newBoard = board.getCopyBoard();
+    setBoard(newBoard);
+  };
+  const highlightCells = () => {
+    board.highlightCells(selectedCell);
+    updateBoard();
+  };
+  useEffect(() => {
+    highlightCells();
+  }, [selectedCell]);
+
   const click = (cell: Cell) => {
-    if (selectedCell && selectedCell.figure?.canMove(cell)) {
+    if (
+      selectedCell &&
+      selectedCell.figure?.canMove(cell) &&
+      selectedCell.isKingSafe(cell)
+    ) {
       selectedCell.moveFigure(cell);
       setSelectedCell(null);
       swapPlayer();
-      console.log("1");
     } else if (cell.figure?.color === currentPlayer) {
       setSelectedCell(cell);
-      console.log("2");
     }
   };
   return (

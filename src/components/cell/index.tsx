@@ -16,7 +16,6 @@ const CellComponent = ({ cell, selected, click }: CellProps) => {
     Figure = FiguresList[cell.figure?.name];
   }
 
-  debugger;
   return (
     <Square
       onClick={() => click(cell)}
