@@ -1,4 +1,4 @@
-import { HORIZONTAL_LINE } from "../../helpers/presets/default";
+import { HORIZONTAL_LINE } from "../../helpers/constants";
 import { Cell } from "../Cell";
 import { Colors } from "../Colors";
 import { Figure, FiguresName } from "./Figure";
@@ -16,14 +16,14 @@ export class King extends Figure {
     if (this.turn !== 0 || dx !== 2 || dy !== 0) {
       return false;
     }
-    if (!this.cell.isKingSafe(this.cell)) {
+    if (this.cell.validateCheck(this.cell)) {
       return false;
     }
 
     const kingPosition = this.cell;
 
-    const leftCastle = targetCell.x === 2;
-    const rightCastle = targetCell.x === 6;
+    const leftCastle = targetCell.x === 3;
+    const rightCastle = targetCell.x === 7;
 
     const checkCastle = (oldRookX, newRookX) => {
       const rookCell = kingPosition.board.getCell(oldRookX, kingPosition.y);
@@ -37,7 +37,7 @@ export class King extends Figure {
           newRookX,
           kingPosition.y
         );
-        if (kingPosition.isKingSafe(newRookPosition)) {
+        if (!kingPosition.validateCheck(newRookPosition)) {
           return true;
         }
       }
@@ -45,10 +45,10 @@ export class King extends Figure {
     };
 
     if (leftCastle) {
-      return checkCastle(0, targetCell.x + 1);
+      return checkCastle(1, targetCell.x + 1);
     }
     if (rightCastle) {
-      return checkCastle(HORIZONTAL_LINE.length - 1, targetCell.x - 1);
+      return checkCastle(HORIZONTAL_LINE.length, targetCell.x - 1);
     }
 
     return false;
@@ -74,8 +74,8 @@ export class King extends Figure {
   public moveFigure(targetCell: Cell): void {
     this.cell.board.kingsPosition.set(this.color, targetCell);
     if (this.canCastle(targetCell)) {
-      const newX = targetCell.x > this.cell.x ? 5 : 3;
-      const oldX = targetCell.x > this.cell.x ? 7 : 0;
+      const newX = targetCell.x > this.cell.x ? 6 : 4;
+      const oldX = targetCell.x > this.cell.x ? 8 : 1;
       const newCellWithRook = this.cell.board.getCell(newX, this.cell.y);
       const oldCellWithRook = this.cell.board.getCell(oldX, this.cell.y);
       oldCellWithRook.moveFigure(newCellWithRook);

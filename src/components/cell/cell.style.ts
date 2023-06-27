@@ -1,11 +1,9 @@
 import styled from "styled-components";
-import { Cell } from "../../models/Cell";
 
 export const Square = styled.div<{
   dark?: boolean;
   available: boolean;
   selected: boolean;
-  onClick: (cell: Cell) => void;
 }>`
   display: flex;
   align-items: center;
@@ -27,15 +25,6 @@ export const Square = styled.div<{
     if (props.selected) {
       return "red";
     }
-    return props.dark ? "#779556;" : "#ebecd0";
+    return props.dark ? "#779556" : "#ebecd0";
   }};
 `;
-
-// export const Available = styled.div`
-//   &:before {
-//     height: 12px;
-//     weight: 12px;
-//     background-color: red;
-//     border-radius: 50%;
-//   }
-// `;

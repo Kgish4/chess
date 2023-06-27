@@ -1,4 +1,7 @@
-const King = ({ fill = "white" }) => (
+import React from "react";
+import { FigureComponent } from "../../helpers/figuresList";
+
+const King = ({ fill }: FigureComponent) => (
   <svg
     xmlns="http://www.w3.org/2000/svg"
     width="70"
@@ -12,7 +15,7 @@ const King = ({ fill = "white" }) => (
   </svg>
 );
 
-const Bishop = ({ fill = "white" }) => (
+const Bishop = ({ fill }: FigureComponent) => (
   <svg
     xmlns="http://www.w3.org/2000/svg"
     width="70"
@@ -25,7 +28,7 @@ const Bishop = ({ fill = "white" }) => (
     />
   </svg>
 );
-const Knight = ({ fill = "white" }) => (
+const Knight = ({ fill }: FigureComponent) => (
   <svg
     xmlns="http://www.w3.org/2000/svg"
     width="70"
@@ -38,7 +41,7 @@ const Knight = ({ fill = "white" }) => (
     />
   </svg>
 );
-const Pawn = ({ fill = "white" }) => (
+const Pawn = ({ fill }: FigureComponent) => (
   <svg
     xmlns="http://www.w3.org/2000/svg"
     width="70"
@@ -51,7 +54,7 @@ const Pawn = ({ fill = "white" }) => (
     />
   </svg>
 );
-const Queen = ({ fill = "white" }) => (
+const Queen = ({ fill }: FigureComponent) => (
   <svg
     xmlns="http://www.w3.org/2000/svg"
     width="70"
@@ -64,7 +67,7 @@ const Queen = ({ fill = "white" }) => (
     />
   </svg>
 );
-const Rook = ({ fill = "white" }) => (
+const Rook = ({ fill }: FigureComponent) => (
   <svg
     xmlns="http://www.w3.org/2000/svg"
     width="70"

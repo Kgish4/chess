@@ -4,45 +4,37 @@ import { Figure, FiguresName } from "./Figure";
 
 export class Pawn extends Figure {
   direction: number;
-  enPassantAvailable: Map<number, { x: number; y: number }> | null;
+  turnsWhenEnPassantCaptureAvailable: Map<number, { x: number; y: number }>;
 
   constructor(color: Colors, cell: Cell) {
     super(color, cell);
     this.name = FiguresName.PAWN;
-    if (this.cell.y === 1) {
+    this.turnsWhenEnPassantCaptureAvailable = new Map();
+    if (this.cell.y === 2) {
       this.direction = 1;
     } else {
       this.direction = -1;
     }
   }
-
-  private isEnPassantAvailable(targetCell: Cell): void {
+  public findCellsForEnPassantCapture(targetCell: Cell): void {
     const board = this.cell.board;
     const rightCell = board.getCell(targetCell.x - 1, targetCell.y);
     const leftCell = board.getCell(targetCell.x + 1, targetCell.y);
-
-    if (
-      this.cell.isEnemy(rightCell) &&
-      rightCell.figure?.name === FiguresName.PAWN
-    ) {
-      const enPassantMap = new Map();
-      enPassantMap.set(this.cell.board.turn + 1, {
-        x: targetCell.x,
-        y: targetCell.y - 1 * this.direction,
-      });
-      rightCell.figure.enPassantAvailable = enPassantMap;
+    const updateAvailableCupture = (cell: Cell) => {
+      if (this.cell.isEnemy(cell) && cell.figure instanceof Pawn) {
+        const enPassantMap = new Map();
+        enPassantMap.set(this.cell.board.turn + 1, {
+          x: targetCell.x,
+          y: targetCell.y - 1 * this.direction,
+        });
+        cell.figure.turnsWhenEnPassantCaptureAvailable = enPassantMap;
+      }
+    };
+    if (rightCell) {
+      updateAvailableCupture(rightCell);
     }
-    if (
-      this.cell.isEnemy(leftCell) &&
-      leftCell.figure?.name === FiguresName.PAWN
-    ) {
-      const enPassantMap = new Map();
-
-      enPassantMap.set(this.cell.board.turn + 1, {
-        x: targetCell.x,
-        y: targetCell.y - 1 * this.direction,
-      });
-      leftCell.figure.enPassantAvailable = enPassantMap;
+    if (leftCell) {
+      updateAvailableCupture(leftCell);
     }
   }
 
@@ -52,28 +44,27 @@ export class Pawn extends Figure {
     }
 
     if (this.turn === 0) {
-      if (this.cell.y === 1) {
-        this.direction = 1;
-      } else {
-        this.direction = -1;
-      }
+      const nextCell = this.cell.board.getCell(
+        this.cell.x,
+        this.cell.y + 1 * this.direction
+      );
       if (
         targetCell.x === this.cell.x &&
         targetCell.y === this.cell.y + 2 * this.direction &&
-        !targetCell.figure
+        !targetCell.figure &&
+        !nextCell.figure
       ) {
         return true;
       }
     }
-
-    const enPassantMoves = this.enPassantAvailable;
-    if (enPassantMoves) {
-      if (
-        targetCell.x === enPassantMoves.get(this.cell.board.turn)?.x &&
-        targetCell.y === enPassantMoves.get(this.cell.board.turn)?.y
-      ) {
-        return true;
-      }
+    const enPassantTurns = this.turnsWhenEnPassantCaptureAvailable;
+    if (
+      (targetCell.x === enPassantTurns.get(this.cell.board.turn)?.x &&
+        targetCell.y === enPassantTurns.get(this.cell.board.turn)?.y) ||
+      (targetCell.x === enPassantTurns.get(this.cell.board.turn + 1)?.x &&
+        targetCell.y === enPassantTurns.get(this.cell.board.turn + 1)?.y)
+    ) {
+      return true;
     }
 
     if (targetCell.y === this.cell.y + 1 * this.direction) {
@@ -106,20 +97,26 @@ export class Pawn extends Figure {
     super.moveFigure(targetCell);
     const dy = Math.abs(this.cell.y - targetCell.y);
     if (dy === 2) {
-      this.isEnPassantAvailable(targetCell);
+      this.findCellsForEnPassantCapture(targetCell);
     }
-    const enPassantPosition = this.enPassantAvailable?.get(
-      this.cell.board.turn
-    );
+    const enPassantCapturePosition =
+      this.turnsWhenEnPassantCaptureAvailable?.get(this.cell.board.turn);
 
     if (
-      targetCell.x === enPassantPosition?.x &&
-      targetCell.y === enPassantPosition.y
+      targetCell.x === enPassantCapturePosition?.x &&
+      targetCell.y === enPassantCapturePosition.y
     ) {
       this.cell.board.getCell(targetCell.x, this.cell.y).figure = null;
     }
-    if (this.enPassantAvailable) {
-      this.enPassantAvailable = null;
+    if (this.turnsWhenEnPassantCaptureAvailable) {
+      this.turnsWhenEnPassantCaptureAvailable = new Map();
     }
+  }
+
+  public isLastMove(targetCell: Cell) {
+    if (targetCell.y === 1 || targetCell.y === 8) {
+      return true;
+    }
+    return false;
   }
 }

@@ -1,15 +1,17 @@
+import { ReactElement } from "react";
 import { King, Bishop, Knight, Pawn, Rook, Queen } from "../assets/figures/";
+import { Colors } from "../models/Colors";
+
+export type FigureComponent = { fill: Colors };
 
 export type Figures = {
-  queen: Function;
-  king: Function;
-  bishop: Function;
-  knight: Function;
-  pawn: Function;
-  rook: Function;
+  queen: ({ fill }: FigureComponent) => ReactElement;
+  king: ({ fill }: FigureComponent) => ReactElement;
+  bishop: ({ fill }: FigureComponent) => ReactElement;
+  knight: ({ fill }: FigureComponent) => ReactElement;
+  pawn: ({ fill }: FigureComponent) => ReactElement;
+  rook: ({ fill }: FigureComponent) => ReactElement;
 };
-
-export type FiguresNames = keyof Figures;
 
 const FiguresList: Figures = {
   queen: Queen,

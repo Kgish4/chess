@@ -1,33 +1,51 @@
-import React from "react";
+import React, { FC, memo } from "react";
 import { Square } from "./cell.style";
 import FiguresList from "../../helpers/figuresList";
-import { Cell } from "../../models/Cell";
 import { Colors } from "../../models/Colors";
+import { FiguresName } from "../../models/Figures/Figure";
 
 interface CellProps {
-  cell: Cell;
+  figureName: FiguresName | null;
+  figureColor: Colors | null;
+  color: Colors;
   selected: boolean;
-  click: (cell: Cell) => void;
+  available: boolean;
 }
 
-const CellComponent = ({ cell, selected, click }: CellProps) => {
+const CellComponent: FC<CellProps> = ({
+  figureName,
+  figureColor,
+  color,
+  available,
+  selected,
+}) => {
   let Figure;
-  if (cell.figure?.name) {
-    Figure = FiguresList[cell.figure?.name];
+  if (figureName) {
+    Figure = FiguresList[figureName];
   }
 
   return (
     <Square
-      onClick={() => click(cell)}
       selected={selected}
-      available={cell.available ? true : false}
-      dark={cell.color === Colors.BLACK ? true : false}
+      available={!!available}
+      dark={color === Colors.BLACK ? true : false}
     >
-      {Figure && (
-        <Figure fill={cell.figure?.color === Colors.BLACK ? "dark" : "white"} />
-      )}
+      {Figure && <Figure fill={figureColor} />}
     </Square>
   );
 };
 
-export default CellComponent;
+export { CellComponent };
+
+function arePropsEqual(oldProps, newProps) {
+  const isSameFigure =
+    oldProps.figureName === newProps.figureName &&
+    oldProps.figureColor === newProps.figureColor;
+  return (
+    oldProps.selected === newProps.selected &&
+    oldProps.available === newProps.available &&
+    isSameFigure
+  );
+}
+
+export default memo(CellComponent, arePropsEqual);

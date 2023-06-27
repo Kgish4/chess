@@ -1,6 +1,13 @@
+import { Pawn } from "./Figures/Pawn";
 import { Board } from "./Board";
 import { Colors } from "./Colors";
 import { Figure, FiguresName } from "./Figures/Figure";
+import { Queen } from "./Figures/Queen";
+import { Knight } from "./Figures/Knight";
+import { Rook } from "./Figures/Rook";
+import { Bishop } from "./Figures/Bishop";
+import { States } from "../helpers/constants";
+import { King } from "./Figures/King";
 
 export class Cell {
   x: number;
@@ -10,6 +17,7 @@ export class Cell {
   board: Board;
   available: boolean;
   enPassant: Cell | null;
+  pawnUpgrade: Boolean;
 
   constructor(
     board: Board,
@@ -24,14 +32,46 @@ export class Cell {
     this.figure = figure;
     this.board = board;
     this.available = false;
+    this.pawnUpgrade = false;
   }
 
   private mockFigure(targetCell: Cell) {
     const targetCellFigure = targetCell.figure;
+    let oldKingPosition;
+    let pawnEnPassant;
+    if (this.figure instanceof King) {
+      oldKingPosition = this.board.kingsPosition.get(this.figure.color);
+      this.board.kingsPosition.set(this.figure.color, targetCell);
+    }
+    if (this.figure instanceof Pawn) {
+      const enPassantPosition =
+        this.figure.turnsWhenEnPassantCaptureAvailable?.get(
+          this.board.turn + 1
+        ) ||
+        this.figure.turnsWhenEnPassantCaptureAvailable?.get(this.board.turn);
+      const dy = Math.abs(this.y - targetCell.y);
+
+      if (dy === 2) {
+        this.figure.findCellsForEnPassantCapture(targetCell);
+      }
+      if (
+        targetCell.x === enPassantPosition?.x &&
+        targetCell.y === enPassantPosition.y
+      ) {
+        pawnEnPassant = this.board.getCell(targetCell.x, this.y).figure;
+        this.board.getCell(targetCell.x, this.y).figure = null;
+      }
+    }
     targetCell.setFigure(this.figure);
     this.figure = null;
 
     return () => {
+      if (targetCell.figure instanceof Pawn && pawnEnPassant) {
+        this.board.getCell(targetCell.x, this.y).figure = pawnEnPassant;
+      }
+      if (oldKingPosition && targetCell.figure) {
+        this.board.kingsPosition.set(targetCell.figure.color, oldKingPosition);
+      }
       this.setFigure(targetCell.figure);
       targetCell.figure = targetCellFigure;
     };
@@ -43,31 +83,77 @@ export class Cell {
     }
     return false;
   }
-
-  public isKingSafe(targetCell: Cell) {
-    let result = true;
-    const boardCells = this.board.cells;
-    const color = this.figure?.color;
-    const figure = this.figure!;
-    const kingPosition =
-      figure.name === FiguresName.KING
-        ? targetCell
-        : this.board.kingsPosition.get(figure.color);
-    const returnFigure = this.mockFigure(targetCell);
-    for (let i = 0; i < this.board.cells.length - 1; i++) {
-      const cell = boardCells[i];
-      let enemyFigure = this.isEnemy(cell) ? cell.figure : null;
-      if (!enemyFigure) {
-        continue;
-      }
-
-      if (enemyFigure.canAttack(kingPosition!)) {
-        result = false;
-        break;
-      }
+  public isTeammate(targetCell: Cell) {
+    if (targetCell.figure) {
+      return targetCell.figure.color === this.figure?.color;
     }
+    return false;
+  }
+
+  public validateCheck(targetCell: Cell): boolean {
+    const returnFigure = this.mockFigure(targetCell);
+
+    const boardState = this.board.goThroughTheCells((cell, resultMap) => {
+      const isEnemyFigure = targetCell.isEnemy(cell);
+      if (!isEnemyFigure) {
+        return;
+      }
+      const enemyFigure = cell.figure!;
+      this.fillBoardState(resultMap, enemyFigure, States.CHECK, this.isCheck);
+    });
     returnFigure();
-    return result;
+    return boardState.get(States.CHECK);
+  }
+  public validateBoardState(targetCell: Cell): Map<string, boolean> {
+    const returnFigure = this.mockFigure(targetCell);
+
+    const boardState = this.board.goThroughTheCells((cell, resultMap) => {
+      const isEnemyFigure = targetCell.isEnemy(cell);
+      if (isEnemyFigure) {
+        const enemy = cell.figure!;
+        this.fillBoardState(resultMap, enemy, States.HASMOVES, this.hasMoves);
+        return;
+      }
+      const isTeammateFigure = targetCell.isTeammate(cell);
+      if (isTeammateFigure) {
+        const teammate = cell.figure!;
+        this.fillBoardState(resultMap, teammate, States.CHECK, this.isCheck);
+      }
+    });
+    returnFigure();
+    return boardState;
+  }
+
+  private fillBoardState(
+    resultMap: Map<string, boolean>,
+    figure: Figure,
+    state: States,
+    method: (figure: Figure) => boolean
+  ) {
+    if (!resultMap.has(state)) {
+      resultMap.set(state, false);
+    }
+    const check = method.call(this, figure);
+    if (check) {
+      resultMap.set(state, true);
+    }
+  }
+
+  private hasMoves(figure: Figure): boolean {
+    if (figure.hasMoves()) {
+      return true;
+    }
+    return false;
+  }
+
+  public isCheck(figure: Figure): boolean {
+    const enemyKingColor =
+      figure.color === Colors.WHITE ? Colors.BLACK : Colors.WHITE;
+    const enemyKingPosition = this.board.kingsPosition.get(enemyKingColor);
+    if (figure.canAttack(enemyKingPosition!)) {
+      return true;
+    }
+    return false;
   }
 
   public isEmptyHorizontal(targetCell: Cell) {
@@ -126,10 +212,34 @@ export class Cell {
     }
   }
 
+  public upgradePawn(upgradedPawn: Cell, figureName: FiguresName, color) {
+    if (!this.pawnUpgrade) {
+      return;
+    }
+    this.figure = null;
+    switch (figureName) {
+      case FiguresName.QUEEN:
+        new Queen(color, upgradedPawn);
+        break;
+      case FiguresName.KNIGHT:
+        new Knight(color, upgradedPawn);
+        break;
+      case FiguresName.ROOK:
+        new Rook(color, upgradedPawn);
+        break;
+      case FiguresName.BISHOP:
+        new Bishop(color, upgradedPawn);
+        break;
+    }
+  }
+
   public moveFigure(targetCell: Cell) {
     const figure = this.figure;
-    if (targetCell.enPassant) {
-      targetCell.enPassant.figure = null;
+    const isPawnLastMove =
+      figure instanceof Pawn && figure.isLastMove(targetCell);
+    if (isPawnLastMove) {
+      this.pawnUpgrade = true;
+      return;
     }
     if (figure) {
       figure.moveFigure(targetCell);

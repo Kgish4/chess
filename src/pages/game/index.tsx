@@ -3,10 +3,12 @@ import BoardComponent from "../../components/board";
 import { Wrapper, StartButton } from "./game.style";
 import { Board } from "../../models/Board";
 import { Colors } from "../../models/Colors";
+import { GameResult } from "../../helpers/constants";
 
 const Game = () => {
   const [board, setBoard] = useState(new Board());
   const [currentPlayer, setCurrentPlayer] = useState<Colors>(Colors.WHITE);
+  const [gameResult, setGameResult] = useState<GameResult | null>(null);
 
   const swapPlayer = () =>
     currentPlayer === Colors.WHITE
@@ -18,6 +20,7 @@ const Game = () => {
   }, []);
 
   const startGame = () => {
+    setGameResult(null);
     const newBoard = new Board();
     newBoard.initCells();
     newBoard.addFigures();
@@ -32,6 +35,8 @@ const Game = () => {
         swapPlayer={swapPlayer}
         board={board}
         setBoard={setBoard}
+        gameResult={gameResult}
+        setGameResult={setGameResult}
       />
       <StartButton onClick={startGame} variant="contained">
         Start new game
